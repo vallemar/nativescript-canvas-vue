@@ -8,6 +8,7 @@ import {
 } from 'nativescript-vue';
 import Details from './Details.vue';
 import type { Canvas, CanvasRenderingContext2D } from '@nativescript/canvas';
+import { Utils } from '@nativescript/core';
 
 function onCanvasReady(event: any) {
   const canvas = event.object as Canvas;
@@ -15,8 +16,8 @@ function onCanvasReady(event: any) {
 }
 function initWebGL(c: Canvas) {
 
-  var w = c.getActualSize().width,
-    h = c.getActualSize().height,
+  var w = global.isAndroid ? Utils.layout.toDevicePixels(c.getActualSize().width) : c.getActualSize().width,
+    h = global.isAndroid ? Utils.layout.toDevicePixels(c.getActualSize().height) : c.getActualSize().height,
     ctx = c.getContext('2d') as CanvasRenderingContext2D,
 
     spawnProb = 1,
