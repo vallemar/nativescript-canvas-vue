@@ -79,7 +79,7 @@ function initWebGL(c: Canvas) {
     ctx.shadowBlur = 0;
     ctx.fillStyle = 'rgba(0, 0, 0, .04)';
     ctx.fillRect(0, 0, w, h);
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 0;
 
     if (Math.random() < spawnProb) lines.push(new Line());
 
@@ -102,9 +102,7 @@ function initWebGL(c: Canvas) {
 
 <template>
   <Frame>
-    <Page>
-
-
+    <Page actionBarHidden="true" androidStatusBarBackground="#0a0a0a">
       <GridLayout>
         <Canvas height="100%" @ready="onCanvasReady($event)"></Canvas>
       </GridLayout>
