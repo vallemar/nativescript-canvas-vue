@@ -14,8 +14,12 @@ const gForce = 1;
 const vec = (x: number, y: number) => ({ x, y })
 const height = Screen.mainScreen.heightDIPs
 const width = Screen.mainScreen.widthDIPs
-const cx = Screen.mainScreen.widthPixels / 2;
-const cy = Screen.mainScreen.heightPixels / 2;
+const cx = Screen.mainScreen.widthDIPs / 2;
+console.log(cx);
+
+
+const cy = Screen.mainScreen.heightDIPs / 2;
+console.log(cy);
 const sensor = ref({ x: 0, y: 0, z: 0 })
 const a1Animated = ref(Math.PI / 2);
 const a2Animated = ref(Math.PI / 2);
@@ -46,7 +50,7 @@ const gSensor = computed(() => {
 const gAnimated = computed(() => {
   return interpolate(gSensor.value, [-10, 10], [-gForce, gForce])
 });
-startListeningForSensor("gravity", onSensor, 17);
+startListeningForSensor("gravity", onSensor, 16);
 
 const p0 = ref({ x: cx, y: cy });
 const p1 = computed(() => ({ x: x1Animated.value, y: y1Animated.value }));
@@ -63,7 +67,7 @@ function buildPath() {
     return;
   }
   try {
-    pathRef?.value?.nativeView.invalidate()
+    //  pathRef?.value?.nativeView.invalidate()
     const context = pathRef?.value?.nativeView._canvas.getContext('2d')
     context.moveTo(first.x, first.y);
 
@@ -81,8 +85,7 @@ function buildPath() {
 let startDate = 0;
 
 function frameCallback(nowDate) {
-  console.log(nowDate);
-  console.log(startDate);
+
   if (startDate === 0 && nowDate != undefined) {
     startDate = nowDate;
   }
@@ -176,16 +179,16 @@ function readyCanvas(args) {
 
         <Label :text="m2"></Label>
         <Dom height="100%" width="100%" horizontalAlignment="center" @loaded="readyCanvas">
-          <Group>
+          <!--    <Group>
             <Path ref="pathRef" paintStyle="fill" strokeWidth="1" color="red">
               <LinearGradient :start="{ x: 0, y: 0 }" :end="{ x: 256, y: 256 }" :colors="['#bd34fe', '#65adf1']" />
             </Path>
-            <Line :p1="p1" :p2="p2" strokeWidth="2" paintStyle="stroke" color="#bd34fe" />
-            <Line :p1="p0" :p2="p1" strokeWidth="2" paintStyle="stroke" color="#bd34fe" />
 
-            <Circle :cx="x1Animated" :cy="y1Animated" :r="m1" color="#65adf1" />
-            <Circle :cx="x2Animated" :cy="y2Animated" :r="m2" color="red" />
-          </Group>
+          </Group> -->
+          <Line :p1="p1" :p2="p2" strokeWidth="2" paintStyle="stroke" color="#bd34fe" />
+          <Line :p1="p0" :p2="p1" strokeWidth="2" paintStyle="stroke" color="#bd34fe" />
+          <Circle :cx="x1Animated" :cy="y1Animated" :r="m1" color="#65adf1" />
+          <Circle :cx="x2Animated" :cy="y2Animated" :r="m2" color="red" />
         </Dom>
       </StackLayout>
     </Page>
