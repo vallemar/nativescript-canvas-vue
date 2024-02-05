@@ -1,36 +1,115 @@
 <script lang="ts" setup>
-import { ref, $navigateBack } from 'nativescript-vue';
+import {
+  ref,
+  computed,
+  onMounted,
+  onUnmounted,
+  $navigateTo,
+} from 'nativescript-vue';
+//https://codepen.io/towc/details/yNywmX
 
-const items = ref(
-  Array(1000)
-    .fill(0)
-    .map((_, index) => `Item ${index + 1}`),
-);
+import Details from './Details.vue';
+import type { Canvas, CanvasRenderingContext2D } from '@nativescript/canvas';
+import { Utils } from '@nativescript/core';
+
+function onCanvasReady(event: any) {
+  const canvas = event.object as Canvas;
+  initWebGL(canvas);
+}
+function initWebGL(c: Canvas) {
+
+  var w = global.isAndroid ? Utils.layout.toDevicePixels(c.getActualSize().width) : c.getActualSize().width,
+    h = global.isAndroid ? Utils.layout.toDevicePixels(c.getActualSize().height) : c.getActualSize().height,
+    ctx = c.getContext('2d') as CanvasRenderingContext2D,
+
+    spawnProb = 1,
+    numberOfMoves = [8, 16], //[min, max]
+    distance = [50, 400],
+    attenuator = 30,
+    timeBetweenMoves = [4, 10],
+
+    lines = [] as any[],
+    frame = (Math.random() * 360) | 0;
+
+  ctx.lineWidth = 1;
+
+  function rand(ar: any) {
+    return Math.random() * (ar[1] - ar[0]) + ar[0];
+  }
+  function Line() {
+    this.x = Math.random() * w;
+    this.y = Math.random() * h;
+    this.last = {};
+    this.target = {};
+    this.totalMoves = rand(numberOfMoves);
+    this.move = 0;
+    this.timeBetweenMoves = rand(timeBetweenMoves);
+    this.timeSpentThisMove = this.timeBetweenMoves;
+    this.distance = rand(distance);
+
+    this.color = 'hsl(hue, 80%, 50%)'.replace('hue', (frame % 360).toString());
+  }
+  Line.prototype.use = function () {
+    ++this.timeSpentThisMove;
+    if (this.timeSpentThisMove >= this.timeBetweenMoves) {
+      ++this.move;
+      this.timeSpentThisMove = 0;
+
+      var rad = Math.random() * 2 * Math.PI;
+      this.target.x = this.x + Math.cos(rad) * this.distance;
+      this.target.y = this.y + Math.sin(rad) * this.distance;
+    }
+
+    this.last.x = this.x;
+    this.last.y = this.y;
+
+    this.x += (this.x - this.target.x) / attenuator;
+    this.y += (this.y - this.target.y) / attenuator;
+
+    ctx.strokeStyle = ctx.shadowColor = this.color;
+    ctx.beginPath();
+    ctx.moveTo(this.last.x, this.last.y);
+    ctx.lineTo(this.x, this.y);
+    ctx.stroke();
+  }
+
+  function anim() {
+    requestAnimationFrame(anim);
+
+    frame += 1.5;
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(0, 0, 0, .04)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.shadowBlur = 0;
+
+    if (Math.random() < spawnProb) lines.push(new Line());
+
+    for (var i = 0; i < lines.length; ++i) {
+      lines[i].use();
+
+      if (lines[i].move >= lines[i].totalMoves) {
+        lines.splice(i, 1);
+        --i;
+      }
+    }
+  }
+
+
+
+  anim();
+
+}
+//https://codepen.io/towc/details/yNywmX
 </script>
 
 <template>
-  <Page actionBarHidden="true">
-    <GridLayout rows="auto, *">
-      <Label
-        text="Go Back"
-        @tap="$navigateBack"
-        class="text-center px-4 py-10 text-2xl text-gray-900 font-bold"
-      />
-
-      <ContentView row="1" class="bg-[#65adf1] rounded-t-3xl">
-        <ListView
-          :items="items"
-          separatorColor="transparent"
-          class="bg-transparent"
-        >
-          <template #default="{ item }">
-            <GridLayout columns="*, auto" class="px-4">
-              <Label :text="item" class="text-3xl py-3 text-white" />
-              <ContentView col="1" class="w-5 h-5 rounded-full bg-white" />
-            </GridLayout>
-          </template>
-        </ListView>
-      </ContentView>
-    </GridLayout>
-  </Page>
+  <Frame>
+    <Page actionBarHidden="true" androidStatusBarBackground="#0a0a0a">
+      <GridLayout>
+        <Canvas height="100%" @ready="onCanvasReady($event)"></Canvas>
+      </GridLayout>
+    </Page>
+  </Frame>
 </template>
+
