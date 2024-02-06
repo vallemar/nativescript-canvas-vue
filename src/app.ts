@@ -1,12 +1,17 @@
+//__non_webpack_require__('system_lib://libcanvasnativev8.so');
+
+
 import { createApp, registerElement } from 'nativescript-vue';
 import Home from './components/Home.vue';
 import { Utils } from '@nativescript/core';
+
 
 registerElement("Canvas", () => require("@nativescript/canvas").Canvas)
 registerElement("Group", () => require("@nativescript/canvas/Dom").Group)
 registerElement("Dom", () => require("@nativescript/canvas/Dom").Dom)
 registerElement("Paint", () => require("@nativescript/canvas/Dom").Paint)
 registerElement("Circle", () => require("@nativescript/canvas/Dom").Circle)
+registerElement("Oval", () => require("@nativescript/canvas/Dom").Oval)
 registerElement("Line", () => require("@nativescript/canvas/Dom").Line)
 registerElement("Points", () => require("@nativescript/canvas/Dom").Points)
 registerElement("Rect", () => require("@nativescript/canvas/Dom").Rect)
@@ -23,7 +28,7 @@ declare const jp: any;
 
 if (global.isAndroid) {
 
-    //   jp.wasabeef.takt.Takt.stock(Utils.android.getApplicationContext()).seat(jp.wasabeef.takt.Seat.TOP_CENTER).color(android.graphics.Color.parseColor("#bd34fe"));
+    //jp.wasabeef.takt.Takt.stock(Utils.android.getApplicationContext()).seat(jp.wasabeef.takt.Seat.TOP_CENTER).color(android.graphics.Color.parseColor("#bd34fe"));
 }
 
 

@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'nativescript-vue';
-import { LinearGradient, type Canvas } from '@nativescript/canvas';
-import { ImageSource, Screen, StackLayout } from '@nativescript/core';
+import { LinearGradient, type Canvas, CanvasRenderingContext2D } from '@nativescript/canvas';
+import type { Dom } from '@nativescript/canvas/Dom';
+import { EventData, ImageSource, Screen, StackLayout } from '@nativescript/core';
 import { startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
 import { interpolate } from '~/utils';
 
@@ -33,7 +34,9 @@ const y2Animated = ref(0);
 
 
 function onSensor(sensorData: any, sensorId: string) {
-  sensor.value = sensorData;
+  //console.log(sensorData);
+
+  sensor.value = global.isIOS ? sensorData.accelerometer.gravity : sensorData;
 }
 
 const gSensor = computed(() => {
@@ -50,7 +53,9 @@ const gSensor = computed(() => {
 const gAnimated = computed(() => {
   return interpolate(gSensor.value, [-10, 10], [-gForce, gForce])
 });
-startListeningForSensor("gravity", onSensor, 16);
+
+startListeningForSensor(global.isIOS ? "motion" : "gravity", onSensor, 16);
+
 
 const p0 = ref({ x: cx, y: cy });
 const p1 = computed(() => ({ x: x1Animated.value, y: y1Animated.value }));
@@ -60,37 +65,38 @@ const frameRate = 30;
 const fps = 1000 / frameRate;
 const time = ref(0);
 const pathRef = ref()
-const trace = ref(buildPath())
+let path: any = null
+function loadedPath(args: EventData) {
+  console.log("loadedPath");
+  path = args.object
+  // (args.object as Dom).onFrameCallback = frameCallback;
+}
+
 function buildPath() {
   const first = points.value[0];
   if (!first || !pathRef?.value?.nativeView?._canvas) {
     return;
   }
   try {
-    //  pathRef?.value?.nativeView.invalidate()
-    const context = pathRef?.value?.nativeView._canvas.getContext('2d')
-    context.moveTo(first.x, first.y);
+    if (path) {
+      // const context: CanvasRenderingContext2D = pathRef?.value?.nativeView._canvas.getContext('2d')
+      // const path = pathRef?.value?.nativeView._path;
+      path.moveTo(first.x, first.y);
 
-    points.value.forEach(({ x, y }) => {
-      context.lineTo(x, y);
-    });
+      points.value.forEach(({ x, y }) => {
+        path.lineTo(x, y);
+      });
+    }
+
 
   } catch (error) {
     console.log(error);
-
   }
-
-  return pathRef?.value?.nativeView;
 };
-let startDate = 0;
 
 function frameCallback(nowDate) {
 
-  if (startDate === 0 && nowDate != undefined) {
-    startDate = nowDate;
-  }
-
-  const frameInfo: any = { timestamp: (nowDate - startDate + 1.5) }
+  const frameInfo: any = { timestamp: nowDate }
 
 
   const g = gAnimated.value;
@@ -149,25 +155,21 @@ function frameCallback(nowDate) {
   x2Animated.value = x2 + cx;
   y2Animated.value = y2 + cy;
   buildPath()
-  requestAnimationFrame(frameCallback);
 }
 
 
 
-function readyCanvas(args) {
-  console.log(args.object);
-  setTimeout(() => {
-    frameCallback();
-  }, 1000);
-}
+
+
+
 
 </script>
 
 <template>
   <Frame>
     <Page actionBarHidden="true" androidStatusBarBackground="#0a0a0a">
-      <StackLayout rows="*" columns="*" iosOverflowSafeArea="false" width="100%" height="100%" class="pt-12">
-        <Label :text="p1.x"></Label>
+      <StackLayout rows="*" columns="*" iosOverflowSafeArea="false" width="100%" height="100%">
+        <!--         <Label :text="p1.x"></Label>
         <Label :text="p1.y"></Label>
         <Label :text="p2.x"></Label>
         <Label :text="p2.y"></Label>
@@ -175,20 +177,20 @@ function readyCanvas(args) {
         <Label :text="y1Animated"></Label>
         <Label :text="m1"></Label>
         <Label :text="x2Animated"></Label>
-        <Label :text="y2Animated"></Label>
+        <Label :text="y2Animated"></Label> -->
 
-        <Label :text="m2"></Label>
-        <Dom height="100%" width="100%" horizontalAlignment="center" @loaded="readyCanvas">
-          <!--    <Group>
-            <Path ref="pathRef" paintStyle="fill" strokeWidth="1" color="red">
-              <LinearGradient :start="{ x: 0, y: 0 }" :end="{ x: 256, y: 256 }" :colors="['#bd34fe', '#65adf1']" />
+        <!--  <Label :text="m2"></Label> -->
+        <Dom height="100%" width="100%" background="white" @loaded="$event.object.onFrameCallback = frameCallback">
+          <Group>
+            <Path @loaded="loadedPath" ref="pathRef" paintStyle="stroke" strokeWidth="0.6" color="#bd34fe">
+              <!--   <LinearGradient :start="vec(cx, cy)" :end="vec(cx + 1, cy + 1)" :colors="['#bd34fe', '#65adf1']" /> -->
             </Path>
+          </Group>
 
-          </Group> -->
-          <Line :p1="p1" :p2="p2" strokeWidth="2" paintStyle="stroke" color="#bd34fe" />
-          <Line :p1="p0" :p2="p1" strokeWidth="2" paintStyle="stroke" color="#bd34fe" />
-          <Circle :cx="x1Animated" :cy="y1Animated" :r="m1" color="#65adf1" />
-          <Circle :cx="x2Animated" :cy="y2Animated" :r="m2" color="red" />
+          <Line :p1="p1" :p2="p2" strokeWidth="2" paintStyle="stroke" />
+          <Line :p1="p0" :p2="p1" strokeWidth="2" paintStyle="stroke" />
+          <Circle :cx="x1Animated" :cy="y1Animated" :r="m1 * 1.5" />
+          <Circle :cx="x2Animated" :cy="y2Animated" :r="m2" />
         </Dom>
       </StackLayout>
     </Page>
